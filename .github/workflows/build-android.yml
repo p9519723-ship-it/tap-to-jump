@@ -1,0 +1,50 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Install Android SDK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+      - name: Install Gradle
+        run: sudo apt-get update && sudo apt-get install -y gradle
+      - name: Build APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0-${{ github.run_number }}
+          release_name: "Tap to Jump v1.0-${{ github.run_number }}"
+          body: "Release automática con APK compilado (debug)."
+          draft: false
+          prerelease: false
+      - name: Upload APK to Release
+        uses: softprops/action-upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: android/app/build/outputs/apk/debug/app-debug.apk
+          asset_name: app-debug.apk
+          asset_content_type: application/vnd.android.package-archive
