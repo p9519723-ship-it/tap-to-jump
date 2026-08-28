@@ -1,0 +1,4 @@
+Trigger build for GitHub Actions
+Timestamp: 2026-08-28T21:12:00Z
+
+Este archivo fue creado para iniciar la compilación del APK (workflow).
